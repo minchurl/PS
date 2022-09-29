@@ -1,0 +1,7 @@
+# executable file
+*.out
+*/*.out
+
+# input file
+input.txt
+*/input.txt
