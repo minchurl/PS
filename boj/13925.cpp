@@ -1,6 +1,7 @@
 #include<bits/stdc++.h>
 #define MOD(x) ((x) % mod)
 #define pb push_back
+#define eb emplace_back
 using namespace std;
 typedef long long LL;
 typedef pair<int, int> pii;
@@ -12,24 +13,33 @@ struct SegTree{
     int sum;
 }segTree[4 * MAXN];
 
-struct Command {
-    int type;
-    int value;
-    Command() {
+// val -> a * val + b
+struct Lazy {
+    int a, b;
 
+    Lazy() {
     }
-    Command(int _type, int _value) {
-        type = _type;
-        value = _value;
+
+    Lazy(int _a, int _b) {
+        a = _a;
+        b = _b;
     }
-};
-vector<Command> commandList[4 * MAXN];
+}lazy[4 * MAXN];
+
 int n;
+
+void initLazy(int here) {
+    lazy[here].a = 1;
+    lazy[here].b = 0;
+}
 
 void initSegTree(int here, int l, int r) {
     segTree[here].l = l;
     segTree[here].r = r;
     segTree[here].sum = 0;
+
+    initLazy(here);
+
     if (l == r) {
         return;
     }
@@ -40,51 +50,29 @@ void initSegTree(int here, int l, int r) {
     initSegTree(2 * here + 1, mid + 1, r);
 }
 
-void clearCommandList(int here) {
-    commandList[here].clear();
-    commandList[here].resize(0);
-}
-void executeCommandList(int here) {
-    for (Command command: commandList[here]){
-        if (command.type == 1) {
-            segTree[here].sum = MOD(segTree[here].sum + (segTree[here].r - segTree[here].l + 1) * command.value);
-        }
-        if (command.type == 2) {
-            segTree[here].sum = MOD(segTree[here].sum * command.value);
-        }
-        if (command.type == 3) {
-            segTree[here].sum = MOD((segTree[here].r - segTree[here].l + 1) * command.value);
-        }
-    }
-    clearCommandList(here);
+void updateLazy(int target, int a, int b) {
+    lazy[target].a = MOD((LL)lazy[target].a * a);
+    lazy[target].b = MOD((LL)lazy[target].b * a + (LL)b);
 }
 
-void updateCommandList(int here, int queryType, int value) {
-    if (queryType == 3) {
-        clearCommandList(here);
-    }
-    commandList[here].pb(Command(queryType, value));
+void updateLazy(int here, int target) {
+    updateLazy(target, lazy[here].a, lazy[here].b);
 }
 
-void updateCommandList(int here, Command command) {
-    updateCommandList(here, command.type, command.value);
-}
-
-void updateCommandList(int here, int target) {
-    for (Command command: commandList[here]) {
-        updateCommandList(target, command);
-    }
+void executeLazy(int here) {
+    segTree[here].sum = MOD((LL)segTree[here].sum * lazy[here].a + (LL)(segTree[here].r - segTree[here].l + 1) * lazy[here].b);
 }
 
 void spread(int here) {
     if (segTree[here].l != segTree[here].r) {
-        updateCommandList(here, 2 * here);
-        updateCommandList(here, 2 * here + 1);
+        updateLazy(here, 2 * here);
+        updateLazy(here, 2 * here + 1);
     }
-    executeCommandList(here);
+    executeLazy(here);
+    initLazy(here);
 }
 
-void updateSegTree(int here, int s, int e, int queryType, int value) {
+void updateSegTree(int here, int s, int e, int a, int b) {
     int l = segTree[here].l;
     int r = segTree[here].r;
     if (l > r) {
@@ -97,14 +85,14 @@ void updateSegTree(int here, int s, int e, int queryType, int value) {
     }
 
     if (s <= l && r <= e) {
-        updateCommandList(here, queryType, value);
+        updateLazy(here, a, b);
         spread(here);
         return;
     }
 
     int mid = (l + r) >> 1;
-    updateSegTree(2 * here, s, e, queryType, value);
-    updateSegTree(2 * here + 1, s, e, queryType, value);
+    updateSegTree(2 * here, s, e, a, b);
+    updateSegTree(2 * here + 1, s, e, a, b);
     segTree[here].sum = MOD(segTree[2 * here].sum + segTree[2 * here + 1].sum);
 }
 int getResult(int here, int s, int e) {
@@ -147,7 +135,15 @@ int main() {
         else {
             int x, y, v;
             scanf("%d %d %d", &x, &y, &v);
-            updateSegTree(1, x, y, type, v);
+            if (type == 1) {
+                updateSegTree(1, x, y, 1, v);
+            }
+            if (type == 2) {
+                updateSegTree(1, x, y, v, 0);
+            }
+            if (type == 3) {
+                updateSegTree(1, x, y, 0, v);
+            }
         }
     }
     return 0;
