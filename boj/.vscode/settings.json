@@ -85,5 +85,6 @@
         "utility": "cpp",
         "valarray": "cpp",
         "vector": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
