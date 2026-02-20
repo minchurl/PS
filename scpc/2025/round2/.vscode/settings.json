@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.dbclient-js": "javascript",
+        "*.ml": "ocaml",
+        "*.kt": "gradle-kotlin-dsl",
+        "vector": "cpp",
+        "__availability": "cpp",
+        "__hash_table": "cpp",
+        "string": "cpp",
+        "__tree": "cpp",
+        "map": "cpp",
+        "set": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
